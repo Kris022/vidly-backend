@@ -1,4 +1,6 @@
 const Joi = require("joi");
+// import genre model
+const Genre = require("../models/genre");
 
 const express = require("express");
 const router = express.Router();
@@ -41,6 +43,8 @@ router.post("/", (req, res) => {
     name: req.body.name,
   };
 
+  // save the genre in mongo db
+  //
   genres.push(newGenre);
 
   res.status(200).send(newGenre);
