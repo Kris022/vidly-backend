@@ -20,63 +20,67 @@ const genres = [
 ];
 
 // Get all genres
-router.get("/", (req, res) => {
-  res.send(genres);
+router.get("/", async (req, res) => {
+  // Add pagination?
+  const result = await Genre.find().sort("name");
+
+  res.status(200).send(result);
 });
 
-// Get genere by id
-router.get("/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const genre = genres.find((g) => g.id === id);
-  if (!genre) return res.status(404).send("Genre not found!");
+// Get single genere by id
+router.get("/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = Genre.findById({ _id: id });
+  if (!result) return res.status(404).send("Genre not found!");
 
-  res.status(200).send(genre);
+  res.status(200).send(result);
 });
 
 // Create a genre
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   const { error } = validateGenre(req.body);
   if (error) return res.status(404).send(error.details[0].message);
 
-  const newGenre = {
-    id: genres.length + 1,
-    name: req.body.name,
-  };
+  try {
+    const newGenre = new Genre({
+      name: req.body.name,
+    });
 
-  // save the genre in mongo db
-  //
-  genres.push(newGenre);
+    const result = await newGenre.save();
 
-  res.status(200).send(newGenre);
+    res.status(200).send(result);
+  } catch (err) {
+    for (field in err.errors) {
+      console.log(err.errors[field].message);
+    }
+    res.status(400).send("Database error.");
+  }
 });
 
 // Update genre put
-router.put("/:id", (req, res) => {
+router.put("/:id", async (req, res) => {
   // valdiate name
-  const id = parseInt(req.params.id);
-  const genre = genres.find((g) => g.id === id);
-
-  if (!genre) return res.status(400).send("Invalid ID given.");
-
   const { error } = validateGenre(req.body);
   if (error) return res.status(404).send(error.details[0].message);
 
-  genre.name = req.body.name;
-  res.status(200).send(genre);
+  const result = await Genre.findByIdAndUpdate(
+    { _id: req.params.id },
+    { $set: { name: req.body.name } }
+  );
+
+  if (!result) return res.status(400).send("Invalid ID given.");
+
+  res.status(200).send(result);
 });
 
 // delete genre
-router.delete("/:id", (req, res) => {
-  // Get id
-  const id = parseInt(req.params.id);
-  const genre = genres.find((g) => g.id === id);
-  if (!genre) return res.status(404).send("Invalid id");
+router.delete("/:id", async (req, res) => {
+  const id = req.params.id;
 
-  // find genre index in array
-  const index = genres.indexOf(genre);
-  genres.splice(index, 1);
+  const result = await Genre.findByIdAndRemove({ _id: id });
+  if (!result) return res.status(404).send("Invalid ID.");
 
-  res.status(200).send(genre);
+  res.status(200).send(result);
 });
 
 module.exports = router;

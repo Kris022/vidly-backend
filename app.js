@@ -1,11 +1,13 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const genres = require("./routes/genres");
+const customers = require("./routes/customers");
 const express = require("express");
 const app = express();
 
 app.use(express.json());
 app.use("/api/genres", genres);
+app.use("/api/customers", customers);
 
 mongoose
   .connect(process.env.MONGO_URI)
@@ -16,6 +18,5 @@ mongoose
     app.listen(port, () => {
       console.log(`Listening on http://localhost:${port}`);
     });
-    
   })
   .catch((err) => console.log(err));
